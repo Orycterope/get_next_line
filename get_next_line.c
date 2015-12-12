@@ -6,15 +6,13 @@
 /*   By: tvermeil <tvermeil@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/12/08 14:49:57 by tvermeil          #+#    #+#             */
-/*   Updated: 2015/12/12 20:29:41 by tvermeil         ###   ########.fr       */
+/*   Updated: 2015/12/12 22:02:48 by tvermeil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-static t_pendant	*pendant;
-
-static t_pendant	*get_pendant_fd(int fd)
+static t_pendant	*get_pendant_fd(int fd, t_pendant *pendant)
 {
 	t_pendant	*parser;
 
@@ -24,7 +22,7 @@ static t_pendant	*get_pendant_fd(int fd)
 	return (parser);
 }
 
-static int			add_pendant_fd(int fd, char *str)
+static int			add_pendant_fd(int fd, char *str, t_pendant **pendant)
 {
 	t_pendant	*new;
 	t_pendant	*parser;
@@ -35,27 +33,27 @@ static int			add_pendant_fd(int fd, char *str)
 	new->fd = fd;
 	new->str = str;
 	new->next = NULL;
-	if (pendant == NULL)
+	if (*pendant == NULL)
 	{
-		pendant = new;
+		*pendant = new;
 		return (1);
 	}
-	parser = pendant;
+	parser = *pendant;
 	while (parser->next != NULL)
 		parser = parser->next;
 	parser->next = new;
 	return (1);
 }
 
-static void			remove_pendant_fd(int fd)
+static void			remove_pendant_fd(int fd, t_pendant **pendant)
 {
 	t_pendant	*lst_parser;
 	t_pendant	*previous;
 	t_pendant	*next;
 
-	if (pendant == NULL)
+	if (*pendant == NULL)
 		return ;
-	lst_parser = pendant;
+	lst_parser = *pendant;
 	previous = NULL;
 	while (lst_parser != NULL)
 	{
@@ -67,7 +65,7 @@ static void			remove_pendant_fd(int fd)
 			if (previous != NULL)
 				previous->next = next;
 			else
-				pendant = next;
+				*pendant = next;
 			return ;
 		}
 		else
@@ -76,49 +74,49 @@ static void			remove_pendant_fd(int fd)
 	}
 }
 
-static char			*split_str(char *str, int fd)
+static char			*split_str(char *str, int fd, t_pendant **pendant)
 {
 	int			i;
 	t_pendant	*previous_pendant;
 
-	previous_pendant = get_pendant_fd(fd);
+	previous_pendant = get_pendant_fd(fd, *pendant);
 	i = 0;
 	while (str[i])
 	{
 		if (str[i] == '\n')
 		{
-			add_pendant_fd(fd, ft_strdup(&str[i + 1]));
+			add_pendant_fd(fd, ft_strdup(&str[i + 1]), pendant);
 			str[i] = '\0';
 			break ;
 		}
 		i++;
 	}
 	if (previous_pendant != NULL)
-		remove_pendant_fd(fd);
+		remove_pendant_fd(fd, pendant);
 	return (str);
 }
 
 int					get_next_line(int const fd, char **line)
 {
-	char		buffer[BUFF_SIZE + 1];
-	char		*join;
-	char		*cpy;
-	int			read_nbr;
-	t_pendant	*pendant_fd;
+	char				buffer[BUFF_SIZE + 1];
+	char				*join;
+	char				*cpy;
+	int					read_nbr;
+	static t_pendant	*pendant;
 
 	if (line == NULL)
 		return (-1);
 	join = NULL;
-	pendant_fd = get_pendant_fd(fd);
-	if (pendant_fd != NULL)
-		join = split_str(ft_strdup(pendant_fd->str), fd);
+	if (get_pendant_fd(fd, pendant) != NULL)
+		join = split_str(ft_strdup(get_pendant_fd(fd, pendant)->str),
+				fd, &pendant);
 	read_nbr = 1;
-	while ((pendant_fd = get_pendant_fd(fd)) == NULL
+	while (get_pendant_fd(fd, pendant) == NULL
 			&& (read_nbr = read(fd, buffer, BUFF_SIZE)) > 0)
 	{
 		buffer[read_nbr] = '\0';
 		cpy = join;
-		join = ft_strjoin(join, split_str(buffer, fd));
+		join = ft_strjoin(join, split_str(buffer, fd, &pendant));
 		free(cpy);
 	}
 	*line = join;
