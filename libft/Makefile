@@ -6,13 +6,13 @@
 #    By: tvermeil <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2015/11/26 14:45:52 by tvermeil          #+#    #+#              #
-#    Updated: 2015/11/27 20:15:59 by tvermeil         ###   ########.fr        #
+#    Updated: 2015/12/12 22:47:41 by tvermeil         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = libft.a
 CC = gcc
-CFLAGS += -Wall -Wextra -Werror
+CFLAGS += -Wall -Wextra -Werror -I includes
 SRCS =     ft_memset.c \
     ft_bzero.c \
     ft_memcpy.c \
